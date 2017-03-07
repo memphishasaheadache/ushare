@@ -18,12 +18,16 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <getopt.h>
+#include <glob.h>
+#include <limits.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <getopt.h>
-#include <stdbool.h>
-#include <limits.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "config.h"
 #include "gettext.h"
@@ -110,10 +114,27 @@ ushare_set_interface (struct ushare_t *ut, const char *iface)
 static void
 ushare_add_contentdir (struct ushare_t *ut, const char *dir)
 {
+
+  int i;
+  glob_t globData;
+  struct stat dirStat;
+
   if (!ut || !dir)
     return;
 
-  ut->contentlist = content_add (ut->contentlist, dir);
+  if (0 == glob(dir, GLOB_BRACE | GLOB_TILDE_CHECK, NULL, &globData)) {
+    for (i = 0; i < globData.gl_pathc; i++) {
+      if (0 == lstat(globData.gl_pathv[i], &dirStat)) {
+        if (S_ISDIR(dirStat.st_mode)) {
+          ut->contentlist = content_add(ut->contentlist, globData.gl_pathv[i]);
+        }
+      }
+    }
+  } else {
+    return;
+ }
+
+  globfree(&globData);
 }
 
 static void
