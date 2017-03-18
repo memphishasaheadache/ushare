@@ -176,6 +176,7 @@ handle_action_request (struct Upnp_Action_Request *request)
 {
   struct service_t *service;
   struct service_action_t *action;
+  struct sockaddr_in *addr = NULL;
   char val[256];
   uint32_t ip;
 
@@ -188,8 +189,9 @@ handle_action_request (struct Upnp_Action_Request *request)
   if (strcmp (request->DevUDN + 5, ut->udn))
     return;
 
-  ip = request->CtrlPtIPAddr.s_addr;
-  ip = ntohl (ip);
+  addr = (struct sockaddr_in *)&request->CtrlPtIPAddr;
+  ip = addr->sin_addr.s_addr;
+  ip = ntohl(ip);
   sprintf (val, "%d.%d.%d.%d",
            (ip >> 24) & 0xFF, (ip >> 16) & 0xFF, (ip >> 8) & 0xFF, ip & 0xFF);
 

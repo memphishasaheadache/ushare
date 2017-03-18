@@ -41,6 +41,8 @@ struct upnp_entry_t {
   struct upnp_entry_t **childs;
   struct mime_type_t *mime_type;
   char *title;
+  char *description;
+  char *descriptionLong;
   char *url;
   off_t size;
   int fd;

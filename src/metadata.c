@@ -192,36 +192,36 @@ upnp_entry_new (struct ushare_t *ut, const char *name, const char *fullpath,
   }
 #endif /* HAVE_DLNA */
  
-  if (ut->xbox360)
-  {
-    if (ut->root_entry)
+  if (ut->xbox360) {
+    if (ut->root_entry) {
       entry->id = ut->starting_id + ut->nr_entries++;
-    else
+    } else {
       entry->id = 0; /* Creating the root node so don't use the usual IDs */
-  }
-  else
+    }
+  } else {
     entry->id = ut->starting_id + ut->nr_entries++;
+  }
   
-  entry->fullpath = fullpath ? strdup (fullpath) : NULL;
+  entry->fullpath = fullpath ? strdup(fullpath) : NULL;
   entry->parent = parent;
   entry->child_count =  dir ? 0 : -1;
   entry->title = NULL;
+  entry->description = NULL;
+  entry->descriptionLong = NULL;
 
   entry->childs = (struct upnp_entry_t **)
     malloc (sizeof (struct upnp_entry_t *));
   *(entry->childs) = NULL;
 
-  if (!dir) /* item */
-    {
+  if (!dir) {
+    /* item */
 #ifdef HAVE_DLNA
-      if (ut->dlna_enabled)
+      if (ut->dlna_enabled) {
         entry->mime_type = NULL;
-      else
-      {
+      } else {
 #endif /* HAVE_DLNA */
       struct mime_type_t *mime = getMimeType (getExtension (name));
-      if (!mime)
-      {
+      if (!mime) {
         --ut->nr_entries; 
         upnp_entry_free (ut, entry);
         log_error ("Invalid Mime type for %s, entry ignored", name);
@@ -238,9 +238,8 @@ upnp_entry_new (struct ushare_t *ut, const char *name, const char *fullpath,
 
       /* Only malloc() what we really need */
       entry->url = strdup (url_tmp);
-    }
-  else /* container */
-    {
+    } else {
+      /* container */
       entry->mime_type = &Container_MIME_Type;
       entry->url = NULL;
     }
@@ -248,41 +247,36 @@ upnp_entry_new (struct ushare_t *ut, const char *name, const char *fullpath,
   /* Try Iconv'ing the name but if it fails the end device
      may still be able to handle it */
   title = iconv_convert (name);
-  if (title)
+  if (title) {
     title_or_name = title;
-  else
-  {
-    if (ut->override_iconv_err)
-    {
+  } else {
+    if (ut->override_iconv_err) {
       title_or_name = strdup (name);
       log_error ("Entry invalid name id=%d [%s]\n", entry->id, name);
-    }
-    else
-    {
+    } else {
       upnp_entry_free (ut, entry);
       log_error ("Freeing entry invalid name id=%d [%s]\n", entry->id, name);
       return NULL;
     }
   }
 
-  if (!dir)
-  {
-    x = strrchr (title_or_name, '.');
-    if (x)  /* avoid displaying file extension */
-      *x = '\0';
+  if (!dir) {
+    /* avoid displaying file extension */
+    x = strrchr(title_or_name, '.');
+    if (x) *x = '\0';
   }
-  x = convert_xml (title_or_name);
-  if (x)
-  {
-    free (title_or_name);
+
+  x = convert_xml(title_or_name);
+  if (x) {
+    free(title_or_name);
     title_or_name = x;
   }
   entry->title = title_or_name;
 
-  if (!strcmp (title_or_name, "")) /* DIDL dc:title can't be empty */
-  {
-    free (title_or_name);
-    entry->title = strdup (TITLE_UNKNOWN);
+  if (!strcmp (title_or_name, "")) {
+    /* DIDL dc:title can't be empty */
+    free(title_or_name);
+    entry->title = strdup(TITLE_UNKNOWN);
   }
 
   entry->size = size;
@@ -298,33 +292,33 @@ upnp_entry_new (struct ushare_t *ut, const char *name, const char *fullpath,
  * the parents child list within the freeing of the first child, as
  * the only entry which is not part of a childs list is the root entry
  */
-static void
-_upnp_entry_free (struct upnp_entry_t *entry)
-{
+static void _upnp_entry_free (struct upnp_entry_t *entry) {
   struct upnp_entry_t **childs;
 
   if (!entry)
     return;
 
   if (entry->fullpath)
-    free (entry->fullpath);
+    free(entry->fullpath);
   if (entry->title)
-    free (entry->title);
+    free(entry->title);
+  if (entry->description)
+    free(entry->descrioption);
+  if (entry->descriptionLong)
+    free(entry->descriptionLong);
   if (entry->url)
-    free (entry->url);
+    free(entry->url);
 #ifdef HAVE_DLNA
   if (entry->dlna_profile)
     entry->dlna_profile = NULL;
 #endif /* HAVE_DLNA */
 
   for (childs = entry->childs; *childs; childs++)
-    _upnp_entry_free (*childs);
-  free (entry->childs);
+    _upnp_entry_free(*childs);
+  free(entry->childs);
 }
 
-void
-upnp_entry_free (struct ushare_t *ut, struct upnp_entry_t *entry)
-{
+void upnp_entry_free(struct ushare_t *ut, struct upnp_entry_t *entry) {
   if (!ut || !entry)
     return;
 
@@ -545,6 +539,8 @@ build_metadata_list (struct ushare_t *ut)
   {
     struct upnp_entry_t *entry = NULL;
     char *title = NULL;
+    char *description = NULL;
+    char *descriptionLong = NULL;
     int size = 0;
 
     log_info (_("Looking for files in content directory : %s\n"),
