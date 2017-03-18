@@ -126,11 +126,26 @@
 /* Represent the CDS DIDL Message Item Title value. */
 #define DIDL_ITEM_TITLE "dc:title"
 
+/* Represent the CDS DIDL Message Item Actor value */
+#define DIDL_ITEM_ACTOR "upnp:actor"
+
 /* Represent the CDS DIDL Message Item Description value */
 #define DIDL_ITEM_DESCRIPTION "dc:description"
 
 /* Represent the CDS DIDL Message Item Long Description value */
-#define DIDL_ITEM_LONG_DESCRIPTION "upnp:longDescription"
+#define DIDL_ITEM_DESCRIPTION_LONG "upnp:longDescription"
+
+/* Represent the CDS DIDL Message Item Director value */
+#define DIDL_ITEM_DIRECTOR "upnp:director"
+
+/* Represent the CDS DIDL Message Item Genre value */
+#define DIDL_ITEM_GENRE "upnp:genre"
+
+/* Represent the CDS DIDL Message Item Producer value */
+#define DIDL_ITEM_PRODUCER "upnp:producer"
+
+/* Represent the CDS DIDL Message Item Rating value */
+#define DIDL_ITEM_RATING "upnp:rating"
 
 /* Represent the CDS DIDL Message Item Resource value. */
 #define DIDL_RES "res"
@@ -286,26 +301,30 @@ didl_add_item (struct buffer_t *out, int item_id,
   didl_add_param (out, DIDL_ITEM_RESTRICTED, restricted);
   buffer_append (out, ">");
 
-  didl_add_tag (out, DIDL_ITEM_CLASS, class);
-  didl_add_tag (out, DIDL_ITEM_TITLE, title);
+  didl_add_tag(out, DIDL_ITEM_CLASS, class);
+  didl_add_tag(out, DIDL_ITEM_TITLE, title);
+  didl_add_tag(out, DIDL_ITEM_ACTOR, title);
+  didl_add_tag(out, DIDL_ITEM_DESCRIPTION, title);
+  didl_add_tag(out, DIDL_ITEM_DESCRIPTION_LONG, title);
+  didl_add_tag(out, DIDL_ITEM_DIRECTOR, title);
+  didl_add_tag(out, DIDL_ITEM_GENRE, title);
+  didl_add_tag(out, DIDL_ITEM_PRODUCER, title);
+  didl_add_tag(out, DIDL_ITEM_RATING, title);
 
-  if (filter_has_val (filter, DIDL_RES))
-  {
+  if (filter_has_val (filter, DIDL_RES)) {
     buffer_appendf (out, "<%s", DIDL_RES);
     // protocolInfo is required :
     didl_add_param (out, DIDL_RES_INFO, protocol_info);
     if (filter_has_val (filter, "@"DIDL_RES_SIZE))
       didl_add_value (out, DIDL_RES_SIZE, size);
     buffer_append (out, ">");
-    if (url)
-    {
+    if (url) {
       extern struct ushare_t *ut;
-      buffer_appendf (out, "http://%s:%d%s/%s",
-                      UpnpGetServerIpAddress (), ut->port, VIRTUAL_DIR, url);
+      buffer_appendf(out, "http://%s:%d%s/%s", UpnpGetServerIpAddress(), ut->port, VIRTUAL_DIR, url);
     }
-    buffer_appendf (out, "</%s>", DIDL_RES);
+    buffer_appendf(out, "</%s>", DIDL_RES);
   }
-  buffer_appendf (out, "</%s>", DIDL_ITEM);
+  buffer_appendf(out, "</%s>", DIDL_ITEM);
 }
 
 static void

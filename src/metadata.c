@@ -191,8 +191,13 @@ upnp_entry_new (struct ushare_t *ut, const char *name, const char *fullpath,
   entry->parent = parent;
   entry->child_count =  dir ? 0 : -1;
   entry->title = NULL;
+  entry->actor = NULL;
   entry->description = NULL;
   entry->descriptionLong = NULL;
+  entry->director = NULL;
+  entry->genre = NULL;
+  entry->producer = NULL;
+  entry->rating = NULL;
 
   entry->childs = (struct upnp_entry_t **)
     malloc (sizeof (struct upnp_entry_t *));
@@ -275,16 +280,16 @@ static void _upnp_entry_free (struct upnp_entry_t *entry) {
   if (!entry)
     return;
 
-  if (entry->fullpath)
-    free(entry->fullpath);
-  if (entry->title)
-    free(entry->title);
-  if (entry->description)
-    free(entry->description);
-  if (entry->descriptionLong)
-    free(entry->descriptionLong);
-  if (entry->url)
-    free(entry->url);
+  pfree(entry->fullpath);
+  pfree(entry->title);
+  pfree(entry->actor);
+  pfree(entry->description);
+  pfree(entry->descriptionLong);
+  pfree(entry->director);
+  pfree(entry->genre);
+  pfree(entry->producer);
+  pfree(entry->rating);
+  pfree(entry->url);
 
   for (childs = entry->childs; *childs; childs++)
     _upnp_entry_free(*childs);
@@ -503,12 +508,9 @@ build_metadata_list (struct ushare_t *ut)
     ut->root_entry = upnp_entry_new (ut, "root", NULL, NULL, -1, true);
 
   /* add files from content directory */
-  for (i=0 ; i < ut->contentlist->count ; i++)
-  {
+  for (i=0 ; i < ut->contentlist->count ; i++) {
     struct upnp_entry_t *entry = NULL;
     char *title = NULL;
-    char *description = NULL;
-    char *descriptionLong = NULL;
     int size = 0;
 
     log_info (_("Looking for files in content directory : %s\n"),
@@ -518,10 +520,9 @@ build_metadata_list (struct ushare_t *ut)
     if (ut->contentlist->content[i][size - 1] == '/')
       ut->contentlist->content[i][size - 1] = '\0';
     title = strrchr (ut->contentlist->content[i], '/');
-    if (title)
+    if (title) {
       title++;
-    else
-    {
+    } else {
       /* directly use content directory name if no '/' before basename */
       title = ut->contentlist->content[i];
     }

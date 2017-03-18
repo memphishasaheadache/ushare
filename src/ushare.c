@@ -827,3 +827,7 @@ main (int argc, char **argv)
   /* it should never be executed */
   return EXIT_SUCCESS;
 }
+
+void pfree(void *ptr) {
+  if (ptr) free(ptr);
+}

@@ -119,5 +119,6 @@ struct action_event_t {
 };
 
 inline void display_headers (void);
+void pfree(void *);
 
 #endif /* _USHARE_H_ */

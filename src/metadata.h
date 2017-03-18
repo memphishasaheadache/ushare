@@ -38,8 +38,13 @@ struct upnp_entry_t {
   struct upnp_entry_t **childs;
   struct mime_type_t *mime_type;
   char *title;
+  char *actor;
   char *description;
   char *descriptionLong;
+  char *director;
+  char *genre;
+  char *producer;
+  char *rating;
   char *url;
   off_t size;
   int fd;
