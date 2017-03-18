@@ -177,21 +177,6 @@ upnp_entry_new (struct ushare_t *ut, const char *name, const char *fullpath,
 
   entry = (struct upnp_entry_t *) malloc (sizeof (struct upnp_entry_t));
 
-#ifdef HAVE_DLNA
-  entry->dlna_profile = NULL;
-  entry->url = NULL;
-  if (ut->dlna_enabled && fullpath && !dir)
-  {
-    dlna_profile_t *p = dlna_guess_media_profile (ut->dlna, fullpath);
-    if (!p)
-    {
-      free (entry);
-      return NULL;
-    }
-    entry->dlna_profile = p;
-  }
-#endif /* HAVE_DLNA */
- 
   if (ut->xbox360) {
     if (ut->root_entry) {
       entry->id = ut->starting_id + ut->nr_entries++;
@@ -215,26 +200,18 @@ upnp_entry_new (struct ushare_t *ut, const char *name, const char *fullpath,
 
   if (!dir) {
     /* item */
-#ifdef HAVE_DLNA
-      if (ut->dlna_enabled) {
-        entry->mime_type = NULL;
-      } else {
-#endif /* HAVE_DLNA */
-      struct mime_type_t *mime = getMimeType (getExtension (name));
-      if (!mime) {
-        --ut->nr_entries; 
-        upnp_entry_free (ut, entry);
-        log_error ("Invalid Mime type for %s, entry ignored", name);
-        return NULL;
-      }
-      entry->mime_type = mime;
-#ifdef HAVE_DLNA
-      }
-#endif /* HAVE_DLNA */
+    struct mime_type_t *mime = getMimeType (getExtension (name));
+    if (!mime) {
+      --ut->nr_entries; 
+      upnp_entry_free (ut, entry);
+      log_error ("Invalid Mime type for %s, entry ignored", name);
+      return NULL;
+    }
+    entry->mime_type = mime;
       
-      if (snprintf (url_tmp, MAX_URL_SIZE, "%d.%s",
-                    entry->id, getExtension (name)) >= MAX_URL_SIZE)
-        log_error ("URL string too long for id %d, truncated!!", entry->id);
+    if (snprintf (url_tmp, MAX_URL_SIZE, "%d.%s",
+          entry->id, getExtension (name)) >= MAX_URL_SIZE)
+      log_error ("URL string too long for id %d, truncated!!", entry->id);
 
       /* Only malloc() what we really need */
       entry->url = strdup (url_tmp);
@@ -303,15 +280,11 @@ static void _upnp_entry_free (struct upnp_entry_t *entry) {
   if (entry->title)
     free(entry->title);
   if (entry->description)
-    free(entry->descrioption);
+    free(entry->description);
   if (entry->descriptionLong)
     free(entry->descriptionLong);
   if (entry->url)
     free(entry->url);
-#ifdef HAVE_DLNA
-  if (entry->dlna_profile)
-    entry->dlna_profile = NULL;
-#endif /* HAVE_DLNA */
 
   for (childs = entry->childs; *childs; childs++)
     _upnp_entry_free(*childs);
@@ -428,12 +401,7 @@ metadata_add_file (struct ushare_t *ut, struct upnp_entry_t *entry,
   if (!entry || !file || !name)
     return;
 
-#ifdef HAVE_DLNA
-  if (ut->dlna_enabled || is_valid_extension (getExtension (file)))
-#else
-  if (is_valid_extension (getExtension (file)))
-#endif
-  {
+  if (is_valid_extension (getExtension (file))) {
     struct upnp_entry_t *child = NULL;
 
     child = upnp_entry_new (ut, name, file, entry, st_ptr->st_size, false);

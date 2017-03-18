@@ -102,14 +102,6 @@ ushare_new (void)
   ut->presentation = NULL;
   ut->use_presentation = true;
   ut->use_telnet = true;
-#ifdef HAVE_DLNA
-  ut->dlna_enabled = false;
-  ut->dlna = NULL;
-  ut->dlna_flags = DLNA_ORG_FLAG_STREAMING_TRANSFER_MODE |
-                   DLNA_ORG_FLAG_BACKGROUND_TRANSFERT_MODE |
-                   DLNA_ORG_FLAG_CONNECTION_STALL |
-                   DLNA_ORG_FLAG_DLNA_V15;
-#endif /* HAVE_DLNA */
   ut->xbox360 = false;
   ut->verbose = false;
   ut->daemon = false;
@@ -146,14 +138,6 @@ ushare_free (struct ushare_t *ut)
     free (ut->ip);
   if (ut->presentation)
     buffer_free (ut->presentation);
-#ifdef HAVE_DLNA
-  if (ut->dlna_enabled)
-  {
-    if (ut->dlna)
-      dlna_uninit (ut->dlna);
-    ut->dlna = NULL;
-  }
-#endif /* HAVE_DLNA */
   if (ut->cfg_file)
     free (ut->cfg_file);
 
@@ -283,41 +267,11 @@ init_upnp (struct ushare_t *ut)
   if (!ut || !ut->name || !ut->udn || !ut->ip)
     return -1;
 
-#ifdef HAVE_DLNA
-  if (ut->dlna_enabled)
-  {
-    len = 0;
-    description =
-      dlna_dms_description_get (ut->name,
-                                "GeeXboX Team",
-                                "http://ushare.geexbox.org/",
-                                "uShare : DLNA Media Server",
-                                ut->model_name,
-                                "001",
-                                "http://ushare.geexbox.org/",
-                                "USHARE-01",
-                                ut->udn,
-                                "/web/ushare.html",
-                                "/web/cms.xml",
-                                "/web/cms_control",
-                                "/web/cms_event",
-                                "/web/cds.xml",
-                                "/web/cds_control",
-                                "/web/cds_event");
-    if (!description)
-      return -1;
-  }
-  else
-  {
-#endif /* HAVE_DLNA */ 
   len = strlen (UPNP_DESCRIPTION) + strlen (ut->name)
     + strlen (ut->model_name) + strlen (ut->udn) + 1;
   description = (char *) malloc (len * sizeof (char));
   memset (description, 0, len);
   sprintf (description, UPNP_DESCRIPTION, ut->name, ut->model_name, ut->udn);
-#ifdef HAVE_DLNA
-  }
-#endif /* HAVE_DLNA */
 
   log_info (_("Initializing UPnP subsystem ...\n"));
   res = UpnpInit (ut->ip, ut->port);
@@ -333,17 +287,6 @@ init_upnp (struct ushare_t *ut)
   if (ut->xbox360)
     log_info (_("Starting in XboX 360 compliant profile ...\n"));
 
-#ifdef HAVE_DLNA
-  if (ut->dlna_enabled)
-  {
-    log_info (_("Starting in DLNA compliant profile ...\n"));
-    ut->dlna = dlna_init ();
-    dlna_set_verbosity (ut->dlna, ut->verbose ? 1 : 0);
-    dlna_set_extension_check (ut->dlna, 1);
-    dlna_register_all_media_profiles (ut->dlna);
-  }
-#endif /* HAVE_DLNA */
-  
   ut->port = UpnpGetServerPort();
   log_info (_("UPnP MediaServer listening on %s:%d\n"),
             UpnpGetServerIpAddress (), ut->port);
@@ -723,7 +666,7 @@ reload_config (int s __attribute__ ((unused)))
 inline void
 display_headers (void)
 {
-  printf (_("%s (version %s), a lightweight UPnP A/V and DLNA Media Server.\n"),
+  printf (_("%s (version %s), a lightweight UPnP A/V Media Server.\n"),
           PACKAGE_NAME, VERSION);
   printf (_("Benjamin Zores (C) 2005-2007, for GeeXboX Team.\n"));
   printf (_("See http://ushare.geexbox.org/ for updates.\n"));

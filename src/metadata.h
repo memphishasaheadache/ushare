@@ -33,9 +33,6 @@
 struct upnp_entry_t {
   int id;
   char *fullpath;
-#ifdef HAVE_DLNA
-  dlna_profile_t *dlna_profile;
-#endif /* HAVE_DLNA */
   struct upnp_entry_t *parent;
   int child_count;
   struct upnp_entry_t **childs;
